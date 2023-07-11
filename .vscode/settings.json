@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "qcoreapplication": "cpp",
+        "qdebug": "cpp",
+        "*.ipp": "cpp",
+        "regex": "cpp"
+    }
+}
