@@ -5,6 +5,12 @@
 #include <QMutex>
 #include <QSqlDatabase>
 
+/**
+ * NConnectPool直接管理Qt的QSqlDatabase，但不再保留QSqlDatabase副本做成员变量。
+ * 如果QSqlDatabase保留为成员变量，其析构一定要在QCoreApplication之前，否则会导致未定义析构问题
+ * 
+ * NAccessDataBase为了方便使用一般是全局变量，所以无法保留QSqlDatabase副本做成员变量
+*/
 class NConnectPool
 {
 public:
@@ -18,8 +24,8 @@ public:
 
 private:
 	QMutex m_mutex;
-	QList<QSqlDatabase> m_listUsedConnection;
-	QList<QSqlDatabase> m_listUnusedConnection;
+    QList<QString> m_listUsedConnection;
+    QList<QString> m_listUnusedConnection;
 
 private:
 	QString m_strIP;

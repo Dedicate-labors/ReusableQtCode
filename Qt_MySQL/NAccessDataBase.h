@@ -58,7 +58,7 @@ public:
 
 private:
 	// 获取
-	EErrorCode getNewID(long long& nNewID, NSqlDatabaseWrapper warpper);
+	EErrorCode getNewID(long long& nNewID, NSqlDatabaseWrapper & warpper);
 
 private:
 	NConnectPool m_connectPool;

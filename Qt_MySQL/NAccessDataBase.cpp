@@ -73,7 +73,7 @@ EErrorCode NAccessDataBase::getSchedulerLog(int nNum, QVector<QString> &vecStrMe
 	return EEC_EXECFAIL;
 }
 
-EErrorCode NAccessDataBase::getNewID(long long &nNewID, NSqlDatabaseWrapper warpper)
+EErrorCode NAccessDataBase::getNewID(long long &nNewID, NSqlDatabaseWrapper & warpper)
 {
 	QSqlQuery sqlQuery(QStringLiteral("select LAST_INSERT_ID() as newid"), warpper);
 	if (sqlQuery.next())

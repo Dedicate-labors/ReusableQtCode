@@ -7,18 +7,6 @@ NConnectPool::NConnectPool()
 
 NConnectPool::~NConnectPool()
 {
-	QMutexLocker locker(&m_mutex);
-	foreach(QSqlDatabase sqlDatabase, m_listUnusedConnection)
-	{
-		sqlDatabase.close();
-		QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
-	}
-
-	foreach(QSqlDatabase sqlDatabase, m_listUsedConnection)
-	{
-		sqlDatabase.close();
-		QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
-	}
 }
 
 bool NConnectPool::initConnectPool(QString strIP, int nPort, QString strDBName, QString strUserName, QString strPassword)
@@ -45,7 +33,7 @@ bool NConnectPool::initConnectPool(QString strIP, int nPort, QString strDBName, 
 			qDebug() << "Open MySQL fail";
 			return false;
 		}
-		m_listUnusedConnection.push_back(sqlDatabase);
+		m_listUnusedConnection.push_back(strConnectName);
 	}
 	qInfo() << "Open MySQL success";
 	return true;
@@ -56,9 +44,9 @@ QSqlDatabase NConnectPool::getConnect()
 	QMutexLocker locker(&m_mutex);
 	if (m_listUnusedConnection.size() > 0)
 	{
-		QSqlDatabase sqlDatabase = m_listUnusedConnection.takeFirst();
-		m_listUsedConnection.push_back(sqlDatabase);
-		return sqlDatabase;
+        QString sqlConnectName = m_listUnusedConnection.takeFirst();
+        m_listUsedConnection.push_back(sqlConnectName);
+        return QSqlDatabase::database(sqlConnectName);
 	}
 	else
 	{
@@ -74,21 +62,21 @@ QSqlDatabase NConnectPool::getConnect()
 		sqlDatabase.setPassword(m_strPassword);
 		sqlDatabase.setConnectOptions(QStringLiteral("MYSQL_OPT_RECONNECT=1"));
 		sqlDatabase.open();
-		m_listUsedConnection.push_back(sqlDatabase);
+		m_listUsedConnection.push_back(strConnectName);
 		return sqlDatabase;
 	}
 }
 
 void NConnectPool::releaseConnect(QSqlDatabase sqlDatabase)
 {
-	QMutexLocker locker(&m_mutex);
-	for (QList<QSqlDatabase>::iterator iTer = m_listUsedConnection.begin(); iTer != m_listUsedConnection.end(); ++iTer)
-	{
-		if (iTer->connectionName() == sqlDatabase.connectionName())
-		{
-			m_listUsedConnection.erase(iTer);
-			break;;
-		}
-	}
-	m_listUnusedConnection.push_back(sqlDatabase);
+    QMutexLocker locker(&m_mutex);
+    for (QList<QString>::iterator iTer = m_listUsedConnection.begin(); iTer != m_listUsedConnection.end(); ++iTer)
+    {
+        if (*iTer == sqlDatabase.connectionName())
+        {
+            m_listUsedConnection.erase(iTer);
+            break;;
+        }
+    }
+    m_listUnusedConnection.push_back(sqlDatabase.connectionName());
 }
