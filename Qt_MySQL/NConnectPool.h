@@ -6,31 +6,29 @@
 #include <QSqlDatabase>
 
 /**
- * NConnectPool直接管理Qt的QSqlDatabase，但不再保留QSqlDatabase副本做成员变量。
- * 如果QSqlDatabase保留为成员变量，其析构一定要在QCoreApplication之前，否则会导致未定义析构问题
- * 
- * NAccessDataBase为了方便使用一般是全局变量，所以无法保留QSqlDatabase副本做成员变量
+ * NConnectPool直接管理Qt的QSqlDatabase，因为QSqlDatabase的Qt静态部分无法跨线程，为了跨线程使用，所以保留QSqlDatabase为成员变量
+ * 因为NAccessDataBase一般是全局对象无法在NCoreApplication之前析构，所以QSqlDatabase成员变量的析构需要在main结束前主动调用
 */
 class NConnectPool
 {
 public:
-	NConnectPool();
-	~NConnectPool();
+    NConnectPool();
+    ~NConnectPool();
 
 public:
-	bool initConnectPool(QString strIP, int nPort, QString strDBName, QString strUserName, QString strPassword);
-	QSqlDatabase getConnect();
-	void releaseConnect(QSqlDatabase sqlDatabase);
+    bool initConnectPool(QString strIP, int nPort, QString strDBName, QString strUserName, QString strPassword);
+    QSqlDatabase getConnect();
+    void releaseConnect(QSqlDatabase sqlDatabase);
 
 private:
-	QMutex m_mutex;
-    QList<QString> m_listUsedConnection;
-    QList<QString> m_listUnusedConnection;
+    QMutex m_mutex;
+    QList<QSqlDatabase> m_listUsedConnection;
+    QList<QSqlDatabase> m_listUnusedConnection;
 
 private:
-	QString m_strIP;
-	int m_nPort;
-	QString m_strDBName;
-	QString m_strUserName;
-	QString m_strPassword;
+    QString m_strIP;
+    int m_nPort;
+    QString m_strDBName;
+    QString m_strUserName;
+    QString m_strPassword;
 };
