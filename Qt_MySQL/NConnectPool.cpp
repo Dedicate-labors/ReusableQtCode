@@ -7,18 +7,18 @@ NConnectPool::NConnectPool()
 
 NConnectPool::~NConnectPool()
 {
-    QMutexLocker locker(&m_mutex);
-    foreach(QSqlDatabase sqlDatabase, m_listUnusedConnection)
-    {
-        sqlDatabase.close();
-        QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
-    }
+    // QMutexLocker locker(&m_mutex);
+    // foreach(QSqlDatabase sqlDatabase, m_listUnusedConnection)
+    // {
+    //     sqlDatabase.close();
+    //     QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
+    // }
 
-    foreach(QSqlDatabase sqlDatabase, m_listUsedConnection)
-    {
-        sqlDatabase.close();
-        QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
-    }
+    // foreach(QSqlDatabase sqlDatabase, m_listUsedConnection)
+    // {
+    //     sqlDatabase.close();
+    //     QSqlDatabase::removeDatabase(sqlDatabase.connectionName());
+    // }
 }
 
 bool NConnectPool::initConnectPool(QString strIP, int nPort, QString strDBName, QString strUserName, QString strPassword)
