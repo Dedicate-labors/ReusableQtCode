@@ -42,6 +42,7 @@ public:
 	// nBusType:	消息类型
 	// pOwner:		接收者
 	// pFunRecv:	接收者处理函数（静态函数）
+	// std::function<void(QVariant inputContext, QVariant& outContext)>如果用到信号与槽中需要注册 
 	void RegRecvBin(int nBusType, std::function<void(QVariant inputContext, QVariant& outContext)> fun);
 	void RemoveRecvBin(int nBusType);
 
