@@ -41,7 +41,7 @@ void NInstallService::ServiceMainProc(int argc, char *argv[])
 		// 删除系统服务
 		UnInstall(pServiceName);
 	else if (strCommand == "-s" || strCommand == "-S")
-		// 运行系统服务
+		// 运行系统服务  运行后不会直接启动程序，系统服务会不带参数的进行执行，进入ExecuteSubProcess()函数
 		RunService(pServiceName);
 	else if (strCommand == "-n" || strCommand == "-N")
 		NormalStart(argc, argv);
@@ -57,7 +57,7 @@ void NInstallService::ServiceMainProc(int argc, char *argv[])
 	}
 	else
 	{
-		std::cout << "异常退出" << std::endl;
+		std::cout << "系统服务启动！" << std::endl;
 		ExecuteSubProcess();
 	}
 }
@@ -218,6 +218,10 @@ void NInstallService::NormalStart(int argc, char *argv[])
 	// 获取程序绝对路径
 	GetModuleFileNameA(NULL, pModuleFile, 256);
 
+	/**
+	 * 这里有个大坑！！！！！！！！！
+	 * 通过系统服务程序启动的程序，其运行相对路径会被修改，所以我们必须写下如下代码进行路径的重置，在进行后续的配置文件读取
+	*/
 	QString currentPath = QFileInfo(QStringLiteral("%1").arg(pModuleFile)).absoluteDir().absolutePath();
 	QDir::setCurrent(currentPath);
 	QApplication::addLibraryPath(QStringLiteral("%1/plugins").arg(currentPath));
