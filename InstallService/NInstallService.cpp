@@ -220,7 +220,8 @@ void NInstallService::NormalStart(int argc, char *argv[])
 
 	/**
 	 * 这里有个大坑！！！！！！！！！
-	 * 通过系统服务程序启动的程序，其运行相对路径会被修改，所以我们必须写下如下代码进行路径的重置，在进行后续的配置文件读取
+	 * 通过系统服务程序启动的程序，其运行相对路径会被修改，所以我们必须写下如下代码进行路径的重置，再进行后续的配置文件读取
+	 * 	putenv("/bin/test/myfile/");   --> 非Qt情况下的环境变量添加，增加搜索路径
 	*/
 	QString currentPath = QFileInfo(QStringLiteral("%1").arg(pModuleFile)).absoluteDir().absolutePath();
 	QDir::setCurrent(currentPath);
