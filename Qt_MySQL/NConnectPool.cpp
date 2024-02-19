@@ -32,6 +32,7 @@ bool NConnectPool::initConnectPool(QString strIP, int nPort, QString strDBName, 
     for (int nIndex = 0; nIndex < 5; ++nIndex)
     {
         QSqlDatabase sqlDatabase;
+        // 建议使用随机名称
         QString strConnectName = QStringLiteral("Driver_%1").arg(nIndex);
         sqlDatabase = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"), strConnectName);
         sqlDatabase.setHostName(strIP);
