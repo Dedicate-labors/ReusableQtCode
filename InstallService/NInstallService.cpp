@@ -44,6 +44,7 @@ void NInstallService::ServiceMainProc(int argc, char *argv[])
 		// 运行系统服务  运行后不会直接启动程序，系统服务会不带参数的进行执行，进入ExecuteSubProcess()函数
 		RunService(pServiceName);
 	else if (strCommand == "-n" || strCommand == "-N")
+		// 直接启动程序本身
 		NormalStart(argc, argv);
 	else if (strCommand == "-c" || strCommand == "-C")
 		std::cout << (checkRegister() ? "注册软件成功" : "未注册软件") << std::endl;
@@ -57,6 +58,7 @@ void NInstallService::ServiceMainProc(int argc, char *argv[])
 	}
 	else
 	{
+		// 系统服务启动程序入口
 		std::cout << "系统服务启动！" << std::endl;
 		ExecuteSubProcess();
 	}
@@ -205,6 +207,7 @@ bool NInstallService::RunService(std::string pName)
 
 void NInstallService::ExecuteSubProcess()
 {
+	// lpServiceStartTable是本程序启动入口之一
 	if (!StartServiceCtrlDispatcherA(lpServiceStartTable))
 	{
 		MessageBoxA(NULL, "系统服务不能直接双击运行，请使用命令行或在控制面板中启动", "提示", MB_OK | MB_ICONERROR);
