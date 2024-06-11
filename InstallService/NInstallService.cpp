@@ -96,9 +96,66 @@ void NInstallService::Install(std::string pPath, std::string pName)
 		else
 		{
 			MessageBox(NULL, L"安装系统服务AIAA_Service成功", L"成功", MB_OK | MB_ICONINFORMATION);
+			SetServiceRecoveryOptions(pName);
 		}
 		CloseServiceHandle(schSCManager);
 	}
+}
+
+bool NInstallService::SetServiceRecoveryOptions(std::string pServiceName)
+{
+	SC_HANDLE schSCManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	if (schSCManager == NULL)
+	{
+		MessageBoxA(NULL, "打开系统服务管理器失败", "失败", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	SC_HANDLE schService = OpenServiceA(schSCManager, pServiceName.c_str(), SERVICE_ALL_ACCESS);
+	// 下面是官方说的权限级别，但是依旧失败！！
+	//SC_HANDLE schService = OpenServiceA(schSCManager, pServiceName.c_str(), SERVICE_CHANGE_CONFIG);
+	if (schService == NULL)
+	{
+		MessageBoxA(NULL, "打开系统服务失败", "失败", MB_OK | MB_ICONERROR);
+		CloseServiceHandle(schSCManager);
+		return false;
+	}
+
+	SERVICE_FAILURE_ACTIONS failureActions;
+	memset(&failureActions, 0, sizeof(failureActions));
+	failureActions.dwResetPeriod = 60;  // 60秒后重启服务
+	failureActions.cActions = 3;  // 设置三个故障恢复动作
+
+	SC_ACTION scActions[3];
+	scActions[0].Type = SC_ACTION_RESTART;  // 第一次失败: 重新启动服务
+	scActions[0].Delay = 1;  // 重启服务之前的延迟时间，这里设置为1ms
+
+	scActions[1].Type = SC_ACTION_RESTART;  // 第二次失败: 重新启动服务
+	scActions[1].Delay = 1;  // 重启服务之前的延迟时间，这里设置为1ms
+
+	scActions[2].Type = SC_ACTION_RESTART;  // 后续失败: 重新启动服务
+	scActions[2].Delay = 1;  // 重启服务之前的延迟时间，这里设置为1ms
+
+	failureActions.lpsaActions = scActions;
+
+	bool bReturn;
+	if (!ChangeServiceConfig2A(schService, SERVICE_CONFIG_FAILURE_ACTIONS, &failureActions))
+	{
+		DWORD errorCode = GetLastError();
+		char tmp[50];
+		sprintf_s(tmp, "%d", errorCode);
+		MessageBoxA(NULL, "设置故障恢复参数失败", tmp, MB_OK | MB_ICONERROR);
+		bReturn = false;
+	}
+	else
+	{
+		MessageBoxA(NULL, "设置故障恢复参数成功", "成功", MB_OK | MB_ICONINFORMATION);
+		bReturn = true;
+	}
+
+	CloseServiceHandle(schService);
+	CloseServiceHandle(schSCManager);
+	return bReturn;
 }
 
 void NInstallService::UnInstall(std::string pName)
@@ -129,6 +186,10 @@ void NInstallService::UnInstall(std::string pName)
 		}
 		CloseServiceHandle(schSCManager);
 	}
+
+	// 无权限删除C盘文件
+	// QDir absoluteAppDir("C:/Program Files/AIAA");
+	// absoluteAppDir.removeRecursively();
 }
 
 bool NInstallService::KillService(std::string pName)

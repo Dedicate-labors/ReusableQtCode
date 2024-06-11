@@ -15,6 +15,8 @@ public:
 
 private:
 	void Install(std::string strFilePath, std::string pServiceName);
+	// 在注册表项中加入重启功能
+	bool SetServiceRecoveryOptions(std::string pServiceName);
 	bool KillService(std::string pServiceName);
 	void UnInstall(std::string pServiceName);
 	bool RunService(std::string pServiceName);
