@@ -54,4 +54,5 @@ void NCoreBusControl::actionExecBusBin(std::function<void(QVariant inputContext,
 {
     QVariant var;
     fun(inputContext, var);
+	emit sigExecBusBin(var);
 }

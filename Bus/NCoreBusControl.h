@@ -22,7 +22,10 @@ public:
 signals:
 	void postExecBusBin(std::function<void(QVariant inputContext, QVariant& outContext)> fun, QVariant inputContext);
 
-public:
+	// 为了异步可以抛出返回值
+	void sigExecBusBin(QVariant outContext);
+
+public slots:
 	// 总线管理器:此管理器用于路由多个类之间的消息传递（函数调用），使用总线技术可以将模块之间的耦合性降到最低
 	//			比如窗口类A需要发送一个消息到窗口类B，但这两个类之间无任何包含及依赖关系，此时可使用总线技术
 	//			窗口类B先向总线注册一个消息处理函数，并标识此函数是用于接收序号为1的消息
@@ -51,7 +54,7 @@ public:
 	// pOutPutContext：返回最后一个被调用的收者的输出值
 	bool ExecBusBin(int nBusType, QVariant inputContext, QVariant& outContext);
 
-	// 异步调用总线 -- 只适合Qt信号与槽体系
+	// 异步调用总线 -- 只适合Qt信号与槽体系，它本身可能是在其他线程中被触发
 	// pInputContext：需要传递给接收者的参数
 	bool ExecBusBin(int nBusType, QVariant inputContext);
 
