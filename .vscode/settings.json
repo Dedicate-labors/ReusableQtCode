@@ -60,6 +60,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "xfunctional": "cpp"
+        "xfunctional": "cpp",
+        "sstream": "cpp"
     }
 }
