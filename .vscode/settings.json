@@ -61,6 +61,7 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "xfunctional": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "qdate": "cpp"
     }
 }

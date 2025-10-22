@@ -1,7 +1,9 @@
 ﻿#include "NViewLog.h"
 #include <QDate>
+#include <QDir>
 #include <QTime>
 #include <QTextStream>
+#include <QCoreApplication>
 
 
 QtMessageHandler NViewLog::defaultHandler = qInstallMessageHandler(nullptr);
@@ -40,6 +42,13 @@ void NViewLog::checkLogFile()
 {
 	QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
 	QString newFileName = dateStr + ".log";
+	QString logFileDir = QStringLiteral("%1/Log/").arg(QCoreApplication::applicationDirPath());
+
+	QDir dir(logFileDir);
+	if (!dir.exists())
+	{
+		dir.mkpath(".");
+	}
 
 	if (newFileName != currentFileName || !logFile.isOpen()) {
 		if (logFile.isOpen()) {
@@ -47,7 +56,7 @@ void NViewLog::checkLogFile()
 		}
 		currentFileName = newFileName;
 		// 以追加模式打开文件，支持中文
-		logFile.setFileName(currentFileName);
+		logFile.setFileName(logFileDir+currentFileName);
 		logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
 	}
 }
