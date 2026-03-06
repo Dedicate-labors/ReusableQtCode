@@ -31,6 +31,7 @@ void NViewLog::log(QString &logContent)
 	checkLogFile();
 
 	// 写入文件（如果文件打开成功）
+	// Waring: 此处没有线程安全！
 	if (logFile.isOpen()) {
 		QTextStream out(&logFile);
 		out << logContent;
