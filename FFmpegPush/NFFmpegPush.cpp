@@ -4,20 +4,20 @@
 
 #ifdef __cplusplus
 extern "C" {
-#include "libavcodec\avcodec.h"
-#include "libavformat\avformat.h"
-#include "libswscale\swscale.h"
-#include "libavutil\timestamp.h"
-#include "libavutil\imgutils.h"
-#include "libswscale\swscale.h"
-#include "libswresample\swresample.h"
-#include "libavutil\samplefmt.h"
-#include "libavutil\opt.h"
-#include "libavutil\frame.h"
-#include "libavutil\channel_layout.h"
-#include "libavutil\common.h"
-#include "libavutil\mathematics.h"
-#include "libavutil\error.h"
+#include "libavcodec/avcodec.h"
+#include "libavformat/avformat.h"
+#include "libswscale/swscale.h"
+#include "libavutil/timestamp.h"
+#include "libavutil/imgutils.h"
+#include "libswscale/swscale.h"
+#include "libswresample/swresample.h"
+#include "libavutil/samplefmt.h"
+#include "libavutil/opt.h"
+#include "libavutil/frame.h"
+#include "libavutil/channel_layout.h"
+#include "libavutil/common.h"
+#include "libavutil/mathematics.h"
+#include "libavutil/error.h"
 }
 #endif
 
@@ -30,12 +30,7 @@ NFFmpegPush::NFFmpegPush(const char* outputUrl, int w, int h, int frameRate, con
 	fmt_ctx(nullptr), codec_ctx(nullptr), sws_ctx(nullptr), av_frame(nullptr), pkt(nullptr), av_stream(nullptr),
 	pts_counter(0), initialized(false) 
 {
-	avformat_network_init();
-	if (!init()) 
-	{
-		cleanup();
-		throw std::runtime_error("FFmpeg initialization failed!");
-	}
+
 }
 
 NFFmpegPush::~NFFmpegPush() {
@@ -50,7 +45,23 @@ NFFmpegPush::~NFFmpegPush() {
 	avformat_network_deinit();
 }
 
-bool NFFmpegPush::init() {
+void NFFmpegPush::initFFmpeg()
+{
+	avformat_network_init();
+}
+
+bool NFFmpegPush::init()
+{
+	if (!initPri())
+	{
+		cleanup();
+		//throw std::runtime_error("FFmpeg initialization failed!");
+		return false;
+	}
+	return true;
+}
+
+bool NFFmpegPush::initPri() {
 	// 1. 创建输出上下文
 	if (avformat_alloc_output_context2(&fmt_ctx, nullptr, "flv", output_url) < 0) {
 		return false;
@@ -69,7 +80,7 @@ bool NFFmpegPush::init() {
 	codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 	codec_ctx->time_base = { 1, fps };
 	codec_ctx->framerate = { fps, 1 };
-	codec_ctx->bit_rate = 2000000;  // 2Mbps
+	codec_ctx->bit_rate = 4000000;  // 2Mbps
 	codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	codec_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY;
 	//codec_ctx->gop_size = fps;      // 关键帧间隔1秒
@@ -102,7 +113,7 @@ bool NFFmpegPush::init() {
 
 	if (codec_ctx->extradata && codec_ctx->extradata_size > 0) {
 		// 检查SPS/PPS是否已生成
-		printf("检查SPS/PPS是否已生成: OK, Extradata size: %d\n", codec_ctx->extradata_size);
+		// printf("检查SPS/PPS是否已生成: OK, Extradata size: %d\n", codec_ctx->extradata_size);
 	}
 
 	// 7. 写入头部
@@ -192,29 +203,84 @@ void NFFmpegPush::cleanup()
 	if (fmt_ctx) avformat_free_context(fmt_ctx);
 }
 
-//void _test_ffmpeg_push()
-//{
-//	cv::VideoCapture cap("rtmp://192.168.18.251:1935/live/livestream1");
-//	if (!cap.isOpened()) {
-//		std::cerr << "无法打开视频流！" << std::endl;
-//		return;
-//	}
-//	cv::Mat matFrame;
-//	cap.read(matFrame);
-//
-//	NFFmpegPush pusher("rtmp://192.168.18.251:1935/live/zxl", matFrame.cols, matFrame.rows, 25, "h264_nvenc");
-//	while (true)
-//	{
-//		if (!cap.read(matFrame)) break;
-//
-//		if (pusher.pushStream(matFrame) != 0) {
-//			std::cerr << "Push frame failed!" << std::endl;
-//			break;
-//		}
-//		// 模拟25fps->应该是40ms，但因为缓冲该时间下无法即时填满，导致视频播放不流畅，改为25ms
-//		//cv::waitKey(25);
-//
-//		// 如果禁用了编码器缓冲
-//		cv::waitKey(5);
-//	}
-//}
+/*
+void _test_ffmpeg_push()
+{
+	cv::VideoCapture cap1("rtmp://192.168.18.251:1935/live/livestream1");
+	if (!cap1.isOpened()) {
+		std::cerr << "无法打开视频流！" << std::endl;
+		return;
+	}
+	cv::VideoCapture cap2("rtmp://192.168.18.251:1935/live/livestream2");
+	if (!cap2.isOpened()) {
+		std::cerr << "无法打开视频流！" << std::endl;
+		return;
+	}
+	cv::VideoCapture cap3("rtmp://192.168.18.251:1935/live/livestream3");
+	if (!cap3.isOpened()) {
+		std::cerr << "无法打开视频流！" << std::endl;
+		return;
+	}
+
+//  	cap.set(cv::CAP_PROP_HW_ACCELERATION, cv::VIDEO_ACCELERATION_D3D11);
+//  	cap.set(cv::CAP_PROP_HW_DEVICE, 1);
+	cv::Mat matFrame1;
+	cap1.read(matFrame1);
+
+	cv::Mat matFrame2;
+	cap2.read(matFrame2);
+	
+	cv::Mat matFrame3;
+	cap3.read(matFrame3);
+
+	NFFmpegPush pusher1("rtmp://192.168.18.251:1935/live/LIKE_1", matFrame1.cols, matFrame1.rows, 25, "h264_nvenc");
+	NFFmpegPush pusher2("rtmp://192.168.18.251:1935/live/LIKE_2", matFrame1.cols, matFrame1.rows, 25, "h264_nvenc");
+	NFFmpegPush pusher3("rtmp://192.168.18.251:1935/live/LIKE_3", matFrame1.cols, matFrame1.rows, 25, "h264_nvenc");
+// 	NFFmpegPush pusher4("rtmp://192.168.18.251:1935/live/LIKE_3", matFrame.cols, matFrame.rows, 25, "h264_nvenc");
+// 	NFFmpegPush pusher5("rtmp://192.168.18.251:1935/live/LIKE_4", matFrame.cols, matFrame.rows, 25, "h264_nvenc");
+// 	NFFmpegPush pusher6("rtmp://192.168.18.251:1935/live/LIKE_5", matFrame.cols, matFrame.rows, 25, "h264_nvenc");
+
+	pusher1.init();
+	pusher2.init();
+	pusher3.init();
+// 	pusher4.init();
+// 	pusher5.init();
+// 	pusher6.init();
+	while (true)
+	{
+		if (!cap1.read(matFrame1)) break;
+		if (!cap2.read(matFrame2)) break;
+		if (!cap3.read(matFrame3)) break;
+
+		if (pusher1.pushStream(matFrame1) != 0) {
+			std::cerr << "Push frame failed!" << std::endl;
+			break;
+		}
+		if (pusher2.pushStream(matFrame2) != 0) {
+			std::cerr << "Push frame failed!" << std::endl;
+			break;
+		}
+		if (pusher3.pushStream(matFrame3) != 0) {
+			std::cerr << "Push frame failed!" << std::endl;
+			break;
+		}
+// 		if (pusher4.pushStream(matFrame) != 0) {
+// 			std::cerr << "Push frame failed!" << std::endl;
+// 			break;
+// 		}
+// 		if (pusher5.pushStream(matFrame) != 0) {
+// 			std::cerr << "Push frame failed!" << std::endl;
+// 			break;
+// 		}
+// 		if (pusher6.pushStream(matFrame) != 0) {
+// 			std::cerr << "Push frame failed!" << std::endl;
+// 			break;
+// 		}
+		// 模拟25fps->应该是40ms，但因为缓冲该时间下无法即时填满，导致视频播放不流畅，改为25ms
+		//cv::waitKey(25);
+
+		// 如果禁用了编码器缓冲
+		cv::waitKey(40);
+	}
+}
+*/

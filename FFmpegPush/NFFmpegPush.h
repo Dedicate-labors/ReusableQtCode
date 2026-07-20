@@ -13,11 +13,17 @@ public:
 	NFFmpegPush(const char* outputUrl, int width, int height, int fps = 30, const char* encoder = "h264_nvenc");
 	~NFFmpegPush();
 
+public:
+	static void initFFmpeg();
+
+public:
+	// 必须调用的初始化函数
+	bool init();
 	// 核心接口：推入一帧图像（返回0成功，负数失败）
 	int pushStream(cv::Mat &frame);
-
+	
 private:
-	bool init();                // 初始化FFmpeg资源
+	bool initPri();                // 初始化FFmpeg资源
 	void cleanup();             // 清理资源
 
 private:
