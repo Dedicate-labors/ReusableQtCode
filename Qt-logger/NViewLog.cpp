@@ -9,6 +9,8 @@
 QtMessageHandler NViewLog::defaultHandler = qInstallMessageHandler(nullptr);
 
 NViewLog::NViewLog()
+	:logFileDir("")
+	,currentFileName("")
 {
 	checkLogFile();
 }
@@ -39,17 +41,26 @@ void NViewLog::log(QString &logContent)
 	}
 }
 
-void NViewLog::checkLogFile()
+void NViewLog::initLogFileDir()
 {
-	QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
-	QString newFileName = dateStr + ".log";
-	QString logFileDir = QStringLiteral("%1/Log/").arg(QCoreApplication::applicationDirPath());
+	logFileDir = QStringLiteral("%1/Log/").arg(QCoreApplication::applicationDirPath());
 
 	QDir dir(logFileDir);
 	if (!dir.exists())
 	{
 		dir.mkpath(".");
 	}
+}
+
+void NViewLog::checkLogFile()
+{
+	// 检查目录是否初始化
+	if (logFileDir.isEmpty()) {
+		initLogFileDir();
+	}
+
+	QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
+	QString newFileName = dateStr + ".log";
 
 	if (newFileName != currentFileName || !logFile.isOpen()) {
 		if (logFile.isOpen()) {

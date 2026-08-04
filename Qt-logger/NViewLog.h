@@ -21,11 +21,13 @@ public:
 	static QtMessageHandler defaultHandler;
 
 private:
+	void initLogFileDir();
 	// 检查并切换日志文件（按日期）
 	void checkLogFile();
 
 private:
 	QFile logFile;
+	QString logFileDir;
 	QString currentFileName;
 };
 
